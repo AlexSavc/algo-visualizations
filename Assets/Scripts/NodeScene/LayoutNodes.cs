@@ -21,4 +21,9 @@ public class LayoutNodes : MonoBehaviour
     {
 
     }
+
+    private void PlaceNode()
+    {
+
+    }
 }
