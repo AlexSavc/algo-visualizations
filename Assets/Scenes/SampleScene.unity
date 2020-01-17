@@ -280,8 +280,8 @@ MonoBehaviour:
   numOfNodes: 30
   numOfBranches: 3
   maxGraphConnections: 4
-  nodeDistance: 2
-  minNodeDistance: 1.5
+  nodeDistance: 1
+  minNodeDistance: 0.5
   nodeParent: {fileID: 1972722207}
 --- !u!1 &136798340
 GameObject:

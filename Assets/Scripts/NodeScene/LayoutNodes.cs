@@ -11,12 +11,17 @@ public class LayoutNodes : MonoBehaviour
     public int numOfNodes = 100;
     public int numOfBranches = 3;
     public int maxGraphConnections = 4;
-    public float nodeDistance = 2;
-    public float minNodeDistance = 1;
+    public float nodeDistance = 1;
+    public float minNodeDistance = 0.5f;
 
     public GameObject nodeParent;
 
+    public delegate void CheckNode(Node toCheck);
+    public CheckNode checkNode;
+
     private Hashtable nodePositions;
+
+    private Node currentNode;
 
     public void Awake()
     {
@@ -30,7 +35,8 @@ public class LayoutNodes : MonoBehaviour
 
     public void SetupNodes()
     {
-        PlaceNodes();
+        LayoutTree();
+        //PlaceNodes();
     }
 
     private void PlaceNodes()
@@ -44,7 +50,20 @@ public class LayoutNodes : MonoBehaviour
         }
     }
 
-    public void SpawnNode(Vector2 startPos, out Vector2 newPos)
+    public void LayoutTree()
+    {
+        Node neuNode = SpawnNode(Camera.main.transform.position, out Vector2 neu);
+        BreadthFirstSearch BFS = (BreadthFirstSearch)gameObject.AddComponent(typeof(BreadthFirstSearch));
+        BFS.Generate(neuNode, SpawnNodes, numOfNodes);
+        //SpawnNodes(neuNode, numOfBranches);
+    }
+
+    public void LayoutGraph()
+    {
+        
+    }
+
+    public Node SpawnNode(Vector2 startPos, out Vector2 newPos)
     {
         Vector2 pos2d = GetNextDir(startPos);
         
@@ -52,7 +71,34 @@ public class LayoutNodes : MonoBehaviour
         neuNode.gameObject.name = "Node " + (nodePositions.Count+1);
 
         nodePositions.Add(neuNode.gameObject.name, neuNode.transform.localPosition);
+        neuNode.SetTotalChildren(1);
+
+        if (currentNode != null) { neuNode.SetParent(currentNode); }
+        currentNode = neuNode;
+
         newPos = pos2d;
+        return neuNode;
+    }
+
+    public void SpawnNodes(Node node)
+    {
+        Vector2 startPos = node.transform.position;
+        node.SetTotalChildren(numOfBranches);
+        for(int i = 0; i < numOfBranches; i++)
+        {
+            Vector2 pos2d = GetNextDir(startPos);
+
+            Node neuNode = Instantiate(nodePrefab, new Vector3(pos2d.x, pos2d.y, 0), Quaternion.identity, nodeParent.transform);
+
+            neuNode.gameObject.name = 
+            neuNode.nodeName = "Node " + (nodePositions.Count + 1);
+            neuNode.nodeNum = nodePositions.Count;
+
+            nodePositions.Add(neuNode.gameObject.name, neuNode.transform.localPosition);
+            neuNode.totalChildren += 1;
+
+            neuNode.SetParent(node);
+        }
     }
 
     public Vector2 GetNextDir(Vector2 start)
@@ -137,4 +183,8 @@ public class LayoutNodes : MonoBehaviour
        return Random.Range(0, 360);
     }
 
+    public bool IsNodeCorrect(Node node)
+    {
+        return false;
+    }
 }
