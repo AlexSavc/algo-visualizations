@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 public class LayoutNodes : MonoBehaviour
 {
@@ -16,6 +17,11 @@ public class LayoutNodes : MonoBehaviour
 
     public GameObject nodeParent;
 
+    public TMP_InputField numOfNodesInput;
+    public TMP_InputField numOfBranchesInput;
+    public TMP_InputField nodeDistanceInput;
+    public TMP_InputField minNodeDistanceInput;
+
     public delegate void CheckNode(Node toCheck);
     public CheckNode checkNode;
 
@@ -25,18 +31,24 @@ public class LayoutNodes : MonoBehaviour
 
     public void Awake()
     {
-        nodePositions = new Hashtable();
+        
     }
 
     public void Start()
     {
-        SetupNodes();
+        //SetupNodes();
     }
 
     public void SetupNodes()
     {
+        nodePositions = new Hashtable();
+        if (nodeParent != null)
+        {
+            Destroy(nodeParent);
+        }
+        nodeParent = new GameObject("NodeParent");
+        SetValues();
         LayoutTree();
-        //PlaceNodes();
     }
 
     private void PlaceNodes()
@@ -54,7 +66,7 @@ public class LayoutNodes : MonoBehaviour
     {
         Node neuNode = SpawnNode(Camera.main.transform.position, out Vector2 neu);
         BreadthFirstSearch BFS = (BreadthFirstSearch)gameObject.AddComponent(typeof(BreadthFirstSearch));
-        BFS.Generate(neuNode, SpawnNodes, numOfNodes);
+        BFS.Generate(neuNode, SpawnNodes, numOfNodes * numOfBranches);
         //SpawnNodes(neuNode, numOfBranches);
     }
 
@@ -65,7 +77,7 @@ public class LayoutNodes : MonoBehaviour
 
     public Node SpawnNode(Vector2 startPos, out Vector2 newPos)
     {
-        Vector2 pos2d = GetNextDir(startPos);
+        Vector2 pos2d = GetNextDir(startPos, out bool success);
         
         Node neuNode = Instantiate(nodePrefab, new Vector3(pos2d.x, pos2d.y, 0), Quaternion.identity, nodeParent.transform);
         neuNode.gameObject.name = "Node " + (nodePositions.Count+1);
@@ -86,29 +98,33 @@ public class LayoutNodes : MonoBehaviour
         node.SetTotalChildren(numOfBranches);
         for(int i = 0; i < numOfBranches; i++)
         {
-            Vector2 pos2d = GetNextDir(startPos);
+            Vector2 pos2d = GetNextDir(startPos, out bool success);
+            if (success)
+            {
+                Node neuNode = Instantiate(nodePrefab, new Vector3(pos2d.x, pos2d.y, 0), Quaternion.identity, nodeParent.transform);
 
-            Node neuNode = Instantiate(nodePrefab, new Vector3(pos2d.x, pos2d.y, 0), Quaternion.identity, nodeParent.transform);
+                neuNode.gameObject.name = 
+                neuNode.nodeName = "Node " + (nodePositions.Count + 1);
+                neuNode.nodeNum = nodePositions.Count - 1;
 
-            neuNode.gameObject.name = 
-            neuNode.nodeName = "Node " + (nodePositions.Count + 1);
-            neuNode.nodeNum = nodePositions.Count;
+                nodePositions.Add(neuNode.gameObject.name, neuNode.transform.localPosition);
+                neuNode.totalChildren += 1;
 
-            nodePositions.Add(neuNode.gameObject.name, neuNode.transform.localPosition);
-            neuNode.totalChildren += 1;
+                neuNode.SetParent(node);
+            }
 
-            neuNode.SetParent(node);
         }
     }
 
-    public Vector2 GetNextDir(Vector2 start)
+    public Vector2 GetNextDir(Vector2 start, out bool success)
     {
+        success = true;
         Vector2 neu = GetRandomDir(start);
         if (!HasRoomAt(neu))
         {
-            neu = IterateDir(start);
+            neu = IterateDir(start, out success);
         }
-
+        
         return neu;
     }
 
@@ -121,24 +137,28 @@ public class LayoutNodes : MonoBehaviour
         return newVector;
     }
 
-    public Vector2 IterateDir(Vector2 start)
+    public Vector2 IterateDir(Vector2 start, out bool success)
     {
         int increment = 120;
-
+        //int add = 0;
         while(increment > 1)
         {
+            //add += 1 / 2;
+            //minNodeDistance += add;
             for(int i = 0; i < 360; i += increment)
             {
                 Vector2 Try = ProcessDir(GetDir(increment), start);
                 if (HasRoomAt(Try))
                 {
+                    success = true;
                     return Try;
                 }
             }
             increment /= 2;
         }
 
-        throw new System.Exception("Couldnt find a way, bro");
+        success = false;
+        return start;
     }
 
     public Vector2 ProcessDir(Vector2 dir, Vector2 start)
@@ -186,5 +206,13 @@ public class LayoutNodes : MonoBehaviour
     public bool IsNodeCorrect(Node node)
     {
         return false;
+    }
+
+    public void SetValues()
+    {
+        numOfNodes = int.Parse(numOfNodesInput.text);
+        numOfBranches = int.Parse(numOfBranchesInput.text);
+        float.TryParse(nodeDistanceInput.text, out nodeDistance);
+        float.TryParse(minNodeDistanceInput.text, out minNodeDistance);
     }
 }

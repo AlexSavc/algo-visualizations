@@ -7,6 +7,7 @@ public class Node : MonoBehaviour
 {
     public Node parent;
     public Node[] connected;
+    bool[] built;
     public string nodeName;
     public Material lineMaterial;
     public int totalChildren = 0;
@@ -24,6 +25,7 @@ public class Node : MonoBehaviour
     public void SetTotalChildren(int i)
     {
         totalChildren = i;
+        built = new bool[i];
     }
 
     public void SetParent(Node node)
@@ -48,30 +50,35 @@ public class Node : MonoBehaviour
         list.Add(node);
         connected = list.ToArray();
 
-        if(connected.Length == totalChildren)
-        {
-            SetupLines();
-        }
+        SetupLines();
     }
 
     private void SetupLines()
     {
-        foreach(Node node in connected)
+        try
         {
-            GameObject lineObj = new GameObject("line to " + node.nodeName);
-            lineObj.transform.SetParent(transform);
-            LineRenderer lineRend = lineObj.AddComponent<LineRenderer>();
 
-            lineRend.positionCount = 2;
-            lineRend.SetPosition(0, transform.position);
-            lineRend.SetPosition(1, node.gameObject.transform.position);
-            lineRend.startColor = Color.gray;
-            lineRend.endColor = Color.gray;
-            lineRend.startWidth = 0.1f;
-            lineRend.endWidth = 0.1f;
-            lineRend.material = lineMaterial;
-            lineRend.sortingLayerName = "Lines";
+            for(int i = 0; i < connected.Length; i++)
+            {
+                if (built[i]) continue;
+                Node node = connected[i];
+                GameObject lineObj = new GameObject("line to " + node.nodeName);
+                lineObj.transform.SetParent(transform);
+                LineRenderer lineRend = lineObj.AddComponent<LineRenderer>();
+
+                lineRend.positionCount = 2;
+                lineRend.SetPosition(0, transform.position);
+                lineRend.SetPosition(1, node.gameObject.transform.position);
+                lineRend.startColor = Color.gray;
+                lineRend.endColor = Color.gray;
+                lineRend.startWidth = 0.1f;
+                lineRend.endWidth = 0.1f;
+                lineRend.material = lineMaterial;
+                lineRend.sortingLayerName = "Lines";
+                built[i] = true;
+            }
         }
+        catch (System.Exception) { }
     }
 
     public void SetVisited()

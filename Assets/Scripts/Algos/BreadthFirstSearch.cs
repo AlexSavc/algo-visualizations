@@ -9,7 +9,7 @@ public class BreadthFirstSearch : MonoBehaviour
         Queue<Node> queue = new Queue<Node>();
         queue.Enqueue(start);
 
-        bool[] visited = new bool[totalNodes];
+        bool[] visited = new bool[totalNodes+1];
         visited[start.nodeNum] = true; 
 
         while(queue.Count > 0)
@@ -20,11 +20,15 @@ public class BreadthFirstSearch : MonoBehaviour
 
             foreach (Node next in neighbours)
             {
-                if (visited[next.nodeNum] == false)
+                try
                 {
-                    visited[next.nodeNum] = true;
-                    queue.Enqueue(next);
+                    if (visited[next.nodeNum] == false)
+                    {
+                        visited[next.nodeNum] = true;
+                        queue.Enqueue(next);
+                    }
                 }
+                catch (System.Exception) { return; }
             }
         }
     }
