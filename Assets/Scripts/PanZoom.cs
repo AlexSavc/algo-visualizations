@@ -14,6 +14,12 @@ public class PanZoom : MonoBehaviour
 
     public bool limit = false;
 
+    void Awake()
+    {
+        if(cam == null)
+        cam = Camera.main;
+    }
+
     void Update()
     {
         if (Utility.IsPonterOverUIObject()) return;

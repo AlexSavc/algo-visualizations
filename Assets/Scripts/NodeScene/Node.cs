@@ -5,15 +5,21 @@ using UnityEngine;
 
 public class Node : MonoBehaviour
 {
+    private Hashtable built;
     public Node parent;
     public Node[] connected;
-    bool[] built;
+    //bool[] built;
     public string nodeName;
     public Material lineMaterial;
-    public int totalChildren = 0;
+    //public int totalChildren = 0;
     public SpriteRenderer rend;
     public Color visitedColor = Color.blue;
     public int nodeNum;
+
+    void Awake()
+    {
+        built = new Hashtable();
+    }
 
     public void SetConnected(Node[] nodes, Node Parent)
     {
@@ -22,11 +28,11 @@ public class Node : MonoBehaviour
         SetupLines();
     }
 
-    public void SetTotalChildren(int i)
+    /*public void SetTotalChildren(int i)
     {
         totalChildren = i;
         built = new bool[i];
-    }
+    }*/
 
     public void SetParent(Node node)
     {
@@ -57,10 +63,9 @@ public class Node : MonoBehaviour
     {
         try
         {
-
             for(int i = 0; i < connected.Length; i++)
             {
-                if (built[i]) continue;
+                if (built.ContainsKey(connected[i].nodeNum)) continue;
                 Node node = connected[i];
                 GameObject lineObj = new GameObject("line to " + node.nodeName);
                 lineObj.transform.SetParent(transform);
@@ -69,13 +74,13 @@ public class Node : MonoBehaviour
                 lineRend.positionCount = 2;
                 lineRend.SetPosition(0, transform.position);
                 lineRend.SetPosition(1, node.gameObject.transform.position);
-                lineRend.startColor = Color.gray;
-                lineRend.endColor = Color.gray;
+                lineRend.startColor = Color.white;
+                lineRend.endColor = Color.white;
                 lineRend.startWidth = 0.1f;
                 lineRend.endWidth = 0.1f;
                 lineRend.material = lineMaterial;
                 lineRend.sortingLayerName = "Lines";
-                built[i] = true;
+                built.Add(connected[i].nodeNum, true);
             }
         }
         catch (System.Exception) { }
@@ -84,5 +89,12 @@ public class Node : MonoBehaviour
     public void SetVisited()
     {
         rend.color = visitedColor;
+        LineRenderer[] rends = parent.gameObject.GetComponentsInChildren<LineRenderer>();
+
+        foreach(LineRenderer rend in rends)
+        {
+            rend.startColor = Color.gray;
+            rend.endColor = Color.gray;
+        }
     }
 }

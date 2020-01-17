@@ -28,16 +28,7 @@ public class LayoutNodes : MonoBehaviour
     private Hashtable nodePositions;
 
     private Node currentNode;
-
-    public void Awake()
-    {
-        
-    }
-
-    public void Start()
-    {
-        //SetupNodes();
-    }
+    
 
     public void SetupNodes()
     {
@@ -51,23 +42,17 @@ public class LayoutNodes : MonoBehaviour
         LayoutTree();
     }
 
-    private void PlaceNodes()
-    {
-        int count = numOfNodes;
-        Vector2 currentPos = Camera.main.transform.position;
-        while (count > 0)
-        {
-            SpawnNode(currentPos, out currentPos);
-            count--;
-        }
-    }
-
     public void LayoutTree()
     {
-        Node neuNode = SpawnNode(Camera.main.transform.position, out Vector2 neu);
-        BreadthFirstSearch BFS = (BreadthFirstSearch)gameObject.AddComponent(typeof(BreadthFirstSearch));
+        Node neuNode = SpawnNode(Vector3.zero, out Vector2 neu);
+        head = neuNode;
+
+        BreadthFirstSearch BFS;
+        if (GetComponent<BreadthFirstSearch>() == null)
+            BFS = (BreadthFirstSearch)gameObject.AddComponent(typeof(BreadthFirstSearch));
+        else BFS = GetComponent<BreadthFirstSearch>();
+
         BFS.Generate(neuNode, SpawnNodes, numOfNodes * numOfBranches);
-        //SpawnNodes(neuNode, numOfBranches);
     }
 
     public void LayoutGraph()
@@ -83,9 +68,11 @@ public class LayoutNodes : MonoBehaviour
         neuNode.gameObject.name = "Node " + (nodePositions.Count+1);
 
         nodePositions.Add(neuNode.gameObject.name, neuNode.transform.localPosition);
-        neuNode.SetTotalChildren(1);
 
-        if (currentNode != null) { neuNode.SetParent(currentNode); }
+        //!\\THIS ONLY WORKS FOR HEAD NODE
+        neuNode.nodeNum = nodePositions.Count - 1;
+        //neuNode.SetTotalChildren(1);
+        
         currentNode = neuNode;
 
         newPos = pos2d;
@@ -95,7 +82,7 @@ public class LayoutNodes : MonoBehaviour
     public void SpawnNodes(Node node)
     {
         Vector2 startPos = node.transform.position;
-        node.SetTotalChildren(numOfBranches);
+        //node.SetTotalChildren(numOfBranches);
         for(int i = 0; i < numOfBranches; i++)
         {
             Vector2 pos2d = GetNextDir(startPos, out bool success);
@@ -105,10 +92,10 @@ public class LayoutNodes : MonoBehaviour
 
                 neuNode.gameObject.name = 
                 neuNode.nodeName = "Node " + (nodePositions.Count + 1);
-                neuNode.nodeNum = nodePositions.Count - 1;
+                neuNode.nodeNum = nodePositions.Count;
 
                 nodePositions.Add(neuNode.gameObject.name, neuNode.transform.localPosition);
-                neuNode.totalChildren += 1;
+                //neuNode.totalChildren += 1;
 
                 neuNode.SetParent(node);
             }
@@ -214,5 +201,17 @@ public class LayoutNodes : MonoBehaviour
         numOfBranches = int.Parse(numOfBranchesInput.text);
         float.TryParse(nodeDistanceInput.text, out nodeDistance);
         float.TryParse(minNodeDistanceInput.text, out minNodeDistance);
+    }
+
+    public void BFS()
+    {
+        if (head == null) { Debug.LogError("Head Node is null"); return; }
+
+        BreadthFirstSearch BFS;
+        if (GetComponent<BreadthFirstSearch>() == null)
+            BFS = (BreadthFirstSearch)gameObject.AddComponent(typeof(BreadthFirstSearch));
+        else BFS = GetComponent<BreadthFirstSearch>();
+
+        StartCoroutine(BFS.Traverse(head));
     }
 }
